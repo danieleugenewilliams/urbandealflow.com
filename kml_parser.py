@@ -7,7 +7,7 @@ from bs4 import BeautifulSoup
 def main():
 
     kmlout = "out.csv" 
-    mypath = "/path/to/kml/files/"
+    mypath = "./kml/"
     kmlfiles = [f for f in listdir(mypath) if isfile(join(mypath, f))]
     kmldata = []
     pmcount = 0
@@ -34,7 +34,7 @@ def main():
             coord = getCoordinates(doc, index)
             #print coord
             if(coord):
-                kmlrecord.append(transform3DCoordToPolygon(coord))
+                kmlrecord.append(coord)
             #print kmlrecord
             print "Index " + str(index) + " of " + str(pmcount)
             #kmldata.append(kmlrecord)
@@ -51,7 +51,20 @@ def transform3DCoordToPolygon(coordinates):
     coordinates = coordinates.replace(",", " ")
     coordinates = coordinates.replace(" 0.0 ", ", ")
     coordinates = coordinates.replace(" 0.0", "") 
-    return "Polygon((" + coordinates + "))"
+    return "'Polygon((" + coordinates + "))'"
+
+# transform 3d coordinates to multipolygon format accepted by MySQL
+def transform3DCoordToMultiPolygon(coordinates_array):
+    multipolygon_str = ""
+    for coord in coordinates_array:
+        coord = coord.replace(",", " ")
+        coord = coord.replace(" 0.0 ", ", ")
+        coord = coord.replace(" 0.0", "")
+        multipolygon_str += "((" + coord + ")),"
+    multipolygon_str = multipolygon_str.rstrip(",")
+    multipolygon_str = "'MultiPolygon(" + multipolygon_str + ")'"
+    print multipolygon_str
+    return multipolygon_str
 
 # get count of placemarks
 def getPlacemarkCount(doc):
@@ -60,10 +73,16 @@ def getPlacemarkCount(doc):
 # get coordinates from kml from for a given placemark
 def getCoordinates(doc, placemark_index):
     # polygon coordinates
+    coord_array = []
     try: 
-        return doc['kml']['Document']['Folder']['Placemark'][placemark_index]['Polygon']['outerBoundaryIs']['LinearRing']['coordinates']
+        return transform3DCoordToPolygon(doc['kml']['Document']['Folder']['Placemark'][placemark_index]['Polygon']['outerBoundaryIs']['LinearRing']['coordinates'])
     except:
-        return None
+        print "encountered an error getting placemark/polygon at " + getSimpleData(doc, placemark_index, "GEOID") 
+        print "getting placemark/multigeometry/polygon"
+        polygon_count = len(doc['kml']['Document']['Folder']['Placemark'][placemark_index]['MultiGeometry']['Polygon'])
+        for polygon_index in xrange(polygon_count):
+            coord_array.append(doc['kml']['Document']['Folder']['Placemark'][placemark_index]['MultiGeometry']['Polygon'][polygon_index]['outerBoundaryIs']['LinearRing']['coordinates'])
+        return transform3DCoordToMultiPolygon(coord_array)
 
 # Data Names and Example Data
 # @name = STATEFP = 01
