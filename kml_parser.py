@@ -19,43 +19,52 @@ from os import listdir
 from os.path import isfile, join
 import csv
 from bs4 import BeautifulSoup
+import glob
+import ntpath
+from zipfile import ZipFile
+
 
 def main():
 
-    kmlout = "out.csv" 
-    mypath = "./kml/"
-    kmlfiles = [f for f in listdir(mypath) if isfile(join(mypath, f))]
-    kmldata = []
+    zipdir = './census/zips/'
+    zipfiles = glob.glob(zipdir + '*.zip')
+    csvdir = './kml_csv/'
+    csvout = "out.csv" 
     pmcount = 0
 
-    for kmlfile in kmlfiles:
-        print "parsing " + mypath + kmlfile
-        with open(mypath + kmlfile, 'rt') as fd:
-            soup = BeautifulSoup(fd.read(), 'xml')
-        doc = xmltodict.parse(soup.prettify())
-        kmlrecord = []
-
-        pmcount = getPlacemarkCount(doc)
-        #print "Placemark count: " + str(pmcount)
-        for index in xrange(pmcount):
-            kmlrecord.append(getSimpleData(doc, index, "STATEFP"))
-            kmlrecord.append(getSimpleData(doc, index, "COUNTYFP"))
-            kmlrecord.append(getSimpleData(doc, index, "TRACTCE"))
-            kmlrecord.append(getSimpleData(doc, index, "AFFGEOID"))
-            kmlrecord.append(getSimpleData(doc, index, "GEOID"))
-            kmlrecord.append(getSimpleData(doc, index, "NAME"))
-            kmlrecord.append(getSimpleData(doc, index, "LSAD"))
-            kmlrecord.append(getSimpleData(doc, index, "ALAND"))
-            kmlrecord.append(getSimpleData(doc, index, "AWATER"))
-            coord = getCoordinates(doc, index)
-            #print coord
-            if(coord):
-                kmlrecord.append(coord)
-            #print kmlrecord
-            print "Index " + str(index) + " of " + str(pmcount)
-            #kmldata.append(kmlrecord)
-            writeKmlCsv(kmlfile + kmlout, kmlrecord)   
+    for zipfile in zipfiles:
+        zipbase = ntpath.basename(zipfile)
+        kmlfile = zipbase[:len(zipbase)-3] + "kml"
+        with ZipFile(zipfile, 'r') as z:
+            for name in z.namelist():
+                if(name == kmlfile):
+                    data = z.read(name)
+                    soup = BeautifulSoup(data, 'xml')
+                    doc = xmltodict.parse(soup.prettify())
+                    kmlrecord = []
+        
+                    pmcount = getPlacemarkCount(doc)
+                    #print "Placemark count: " + str(pmcount)
+                    for index in xrange(pmcount):
+                        kmlrecord.append(getSimpleData(doc, index, "STATEFP"))
+                        kmlrecord.append(getSimpleData(doc, index, "COUNTYFP"))
+                        kmlrecord.append(getSimpleData(doc, index, "TRACTCE"))
+                        kmlrecord.append(getSimpleData(doc, index, "AFFGEOID"))
+                        kmlrecord.append(getSimpleData(doc, index, "GEOID"))
+                        kmlrecord.append(getSimpleData(doc, index, "NAME"))
+                        kmlrecord.append(getSimpleData(doc, index, "LSAD"))
+                        kmlrecord.append(getSimpleData(doc, index, "ALAND"))
+                        kmlrecord.append(getSimpleData(doc, index, "AWATER"))
+                        coord = getCoordinates(doc, index)
+                        #print coord
+                        if(coord):
+                            kmlrecord.append(coord)
+                        #print kmlrecord
+                        print "Index " + str(index) + " of " + str(pmcount)
+                        #kmldata.append(kmlrecord)
+                        writeKmlCsv(csvdir + kmlfile + csvout, kmlrecord)   
  
+
 # output kml data to csv file
 def writeKmlCsv(outputfile, data):
     with open(outputfile, "ab") as f:
