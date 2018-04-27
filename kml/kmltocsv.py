@@ -22,11 +22,12 @@ from bs4 import BeautifulSoup
 import glob
 import ntpath
 from zipfile import ZipFile
-
+import sys
 
 def main():
 
-    zipdir = './census/zips/'
+    zipdir = './test/'
+    #zipdir = './census/zips/'
     zipfiles = glob.glob(zipdir + '*.zip')
     csvdir = './kml_csv/'
     csvout = "out.csv" 
@@ -46,6 +47,7 @@ def main():
                     pmcount = getPlacemarkCount(doc)
                     #print "Placemark count: " + str(pmcount)
                     for index in xrange(pmcount):
+                        kmlrecord = []
                         kmlrecord.append(getSimpleData(doc, index, "STATEFP"))
                         kmlrecord.append(getSimpleData(doc, index, "COUNTYFP"))
                         kmlrecord.append(getSimpleData(doc, index, "TRACTCE"))
@@ -60,16 +62,17 @@ def main():
                         if(coord):
                             kmlrecord.append(coord)
                         #print kmlrecord
+                        
                         print "Index " + str(index) + " of " + str(pmcount)
                         #kmldata.append(kmlrecord)
                         writeKmlCsv(csvdir + kmlfile + csvout, kmlrecord)   
- 
 
 # output kml data to csv file
 def writeKmlCsv(outputfile, data):
     with open(outputfile, "ab") as f:
         writer = csv.writer(f, delimiter="\t")
         writer.writerow(data)
+
 
 # transform 3d coordinates to polygon format accepted by MySQL
 def transform3DCoordToPolygon(coordinates):
@@ -85,7 +88,7 @@ def transform3DCoordToMultiPolygon(coordinates_array):
         coord = coord.replace(",", " ")
         coord = coord.replace(" 0.0 ", ", ")
         coord = coord.replace(" 0.0", "")
-        multipolygon_str += "((" + coord + ")),"
+        multipolygon_str += "Polygon((" + coord + ")),"
     multipolygon_str = multipolygon_str.rstrip(",")
     multipolygon_str = "'MultiPolygon(" + multipolygon_str + ")'"
     print multipolygon_str
