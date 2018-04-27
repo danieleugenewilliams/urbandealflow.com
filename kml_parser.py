@@ -114,7 +114,7 @@ def getSimpleData(doc, placemark_index, data_name):
     simple = doc['kml']['Document']['Folder']['Placemark'][placemark_index]['ExtendedData']['SchemaData']['SimpleData']
     for x in xrange(len(simple)):
         if(simple[x]['@name'] == data_name):
-            return simple[x]['#text']
+            return "'" + str(simple[x]['#text']) + "'"
 
 
 
