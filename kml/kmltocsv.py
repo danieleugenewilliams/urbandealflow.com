@@ -26,6 +26,7 @@ import sys
 
 def main():
 
+    # set up paths and filenames
     zipdir = './test/'
     #zipdir = './census/zips/'
     zipfiles = glob.glob(zipdir + '*.zip')
@@ -33,6 +34,11 @@ def main():
     csvout = "out.csv" 
     pmcount = 0
 
+    # ensure paths exist, and if not mkdirs
+    assurePathExists(zipdir)
+    assurePathExists(csvdir)
+
+    # loop through kml zipfiles
     for zipfile in zipfiles:
         zipbase = ntpath.basename(zipfile)
         kmlfile = zipbase[:len(zipbase)-3] + "kml"
@@ -72,6 +78,11 @@ def writeKmlCsv(outputfile, data):
     with open(outputfile, "ab") as f:
         writer = csv.writer(f, delimiter="\t")
         writer.writerow(data)
+
+def assurePathExists(path):
+    dir = os.path.dirname(path)
+    if not os.path.exists(dir):
+        os.makedirs(dir)
 
 
 # transform 3d coordinates to polygon format accepted by MySQL
