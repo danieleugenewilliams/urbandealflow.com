@@ -99,7 +99,7 @@ def transform3DCoordToMultiPolygon(coordinates_array):
         coord = coord.replace(",", " ")
         coord = coord.replace(" 0.0 ", ", ")
         coord = coord.replace(" 0.0", "")
-        multipolygon_str += "Polygon((" + coord + ")),"
+        multipolygon_str += "((" + coord + ")),"
     multipolygon_str = multipolygon_str.rstrip(",")
     multipolygon_str = "'MultiPolygon(" + multipolygon_str + ")'"
     print multipolygon_str
