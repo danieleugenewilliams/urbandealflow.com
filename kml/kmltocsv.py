@@ -15,6 +15,7 @@ limitations under the License.
 '''
 
 import xmltodict
+import os
 from os import listdir
 from os.path import isfile, join
 import csv
