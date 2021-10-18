@@ -1,1 +1,3 @@
 UrbanDealFlow.com
+
+This was an old project to clean up and visualize the Opportunity data from the U.S. Treasury. It also cleans up the map (kml) files from the U.S. Census in order to import the data into MySQL. 
